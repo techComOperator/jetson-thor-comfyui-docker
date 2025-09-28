@@ -1,22 +1,39 @@
-FROM ubuntu:24.04
+FROM --platform=arm64 ubuntu:24.04
 
 # Update and upgrade packages.
 RUN apt update && \
     apt upgrade
 
+# Create non-root user for added security.
+ARG USERNAME=comfyui-user
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN mkdir /comfyui
+WORKDIR /comfyui
+# Create the user
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
+
 # Install Miniconda and Python 3.13
-RUN 
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh && \
+    chmod +x Miniconda3-latest-Linux-aarch64.sh && \
+    ./Miniconda3-latest-Linux-aarch64.sh && \
+    conda create -n comfyui python=3.13
 
 # Install CUDA 13 since it's the only one that works with Jetson Thor
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/arm64/cuda-keyring_1.1-1_all.deb
-sudo dpkg -i cuda-keyring_1.1-1_all.deb
-sudo apt-get update
-sudo apt-get -y install cuda-toolkit-13-0 cuda-compat-13
-sudo apt-get install cudnn python3-libnvinfer python3-libnvinfer-dev tensorrt
+RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/arm64/cuda-keyring_1.1-1_all.deb && \
+    dpkg -i cuda-keyring_1.1-1_all.deb && \
+    apt-get update && \
+    apt-get -y install cuda-toolkit-13-0 cuda-compat-13-0 && \
+    apt-get install cudnn python3-libnvinfer python3-libnvinfer-dev tensorrt
 
 # Verify CUDA 13 location.
-ls -l /usr/local | grep cuda
-sudo ln -s /usr/local/cuda-12.4 /usr/local/cuda
+RUN ls -l /usr/local | grep cuda && \
+    ln -s /usr/local/cuda-3.0 /usr/local/cuda && \
+    chown $USERNAME: --recursive /comfyui
+
+USER $USERNAME
 
 export PATH=/usr/local/cuda/bin:$PATH
 nvcc --version
