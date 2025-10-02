@@ -3,7 +3,7 @@ FROM nvidia/cuda:13.0.1-cudnn-devel-ubuntu24.04
 # Update and upgrade packages.
 RUN apt-get update -y && \
     apt-get upgrade -y && \
-    apt-get install -y wget curl git
+    apt-get install -y wget curl git vim
 
 RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/arm64/cuda-keyring_1.1-1_all.deb && \
     dpkg -i cuda-keyring_1.1-1_all.deb
@@ -35,8 +35,9 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh 
 RUN echo "export PATH=/usr/local/cuda/bin:$PATH" >> ~/.bashrc && \
     echo "export PATH=/home/${USERNAME}/miniconda3/bin:$PATH" >> ~/.bashrc && \
     echo "export CUDA_HOME=/usr/local/cuda" >> ~/.bashrc && \
-    echo "export CUDA_PATH=/usr/local/cuda" >> ~/.bashrc && \
-    echo "/home/${USERNAME}/miniconda3/bin/conda activate comfyui" >> ~/.bashrc
+    echo "export CUDA_PATH=/usr/local/cuda" >> ~/.bashrc 
+    # echo "/home/${USERNAME}/miniconda3/bin/conda init" >> ~/.bashrc && \
+    # echo "/home/${USERNAME}/miniconda3/bin/conda activate comfyui" >> ~/.bashrc
 
 SHELL [ "/bin/bash", "-c" ]
 
@@ -50,4 +51,5 @@ RUN /home/${USERNAME}/miniconda3/bin/comfy-cli --skip-prompt install --nvidia
 # Run ComfyUI with an argument that allows you to change port and address.
 
 EXPOSE 8188
-CMD ["python","/home/${USERNAME}/ComfyUI/main.py","--listen","0.0.0.0"]
+# The container uses relative paths to run the command.
+ENTRYPOINT ["miniconda3/bin/python","comfy/ComfyUI/main.py","--listen","0.0.0.0"]
