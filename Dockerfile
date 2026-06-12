@@ -10,6 +10,7 @@ RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
         wget \
         curl \
+        ffmpeg \
         git \
         python3 \
         python3-venv \
